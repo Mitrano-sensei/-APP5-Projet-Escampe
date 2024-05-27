@@ -7,12 +7,14 @@ import escampe.board.types.SquareType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class EscampeBoard implements IBoard{
 
     private final List<Square> squares = new ArrayList<>();
     private final List<Piece> pieces = new ArrayList<>();
+    private String lastMove = "";
 
     public EscampeBoard(){
         initSquares();
@@ -84,13 +86,41 @@ public class EscampeBoard implements IBoard{
         var playerPieces = pieces.stream().filter(p -> p.getPlayer() == playerT).collect(Collectors.toList());
         ArrayList<String> moves = new ArrayList<>();
 
+        if (pieces.isEmpty())
+        {
+            return getPossibleFirstMoves(player);
+        }
+
+        var lastLisere = getLastLisere();
         for (var piece : playerPieces){
+            var pos = piece.getPos();
+            boolean isValidLisere = squares.stream()
+                    .filter(s -> s.getColumn() == pos[0] && s.getLine() == pos[1] )
+                    .anyMatch(s -> s.getType().toNumber() == lastLisere || lastLisere == -1);
+            if (!isValidLisere) continue;
+
             var m = possibleMoves(piece, playerT);
             var myPos = toLetterNumber(piece.getPos());
             m.forEach(mo -> moves.add(myPos + "-" + mo));
         }
 
-        return moves.toArray(new String[] {});
+        if (moves.isEmpty())
+            return new String[] {"PASSE"}; // FIXME : May be "E"
+        else
+            return moves.toArray(new String[] {});
+    }
+
+    private String[] getPossibleFirstMoves(String player) {
+        String[] possibleMoveOneTwo = new String[]{ "A1/B1/C1/D1/E1/F1" };
+        String[] possibleMoveFiveSix = new String[]{ "A6/B6/C6/D6/E6/F6" };
+
+        if (Objects.equals(player, "noir")) return possibleMoveOneTwo;
+
+        var randomPiece = pieces.stream().filter(p -> p.getPlayer() == PlayerTurn.BLACK).findFirst().orElseThrow();
+        var randomPos = randomPiece.getPos();
+
+        if (randomPos[1] == 0 || randomPos[1] == 1) return possibleMoveFiveSix;
+        return possibleMoveOneTwo;
     }
 
     private final int[] UP = new int[] {0, -1};
@@ -152,36 +182,78 @@ public class EscampeBoard implements IBoard{
         if (movement != RIGHT) res.addAll(move(nbStep - 1, newPos, LEFT, playerT));
         if (movement != DOWN) res.addAll(move(nbStep - 1, newPos, UP, playerT));
 
-
         return res;
+    }
+
+    private int getLastLisere() {
+        if (lastMove.isEmpty() || lastMove.isBlank())
+        {
+            return -1;
+        }
+        var lastSquareCoord = lastMove.split("-")[1];
+        var coords = toCoord(lastSquareCoord);
+
+        var lastSquare = squares.stream().filter(s -> s.getColumn() == coords[0] && s.getLine() == coords[1]).findFirst().orElseThrow();
+        return lastSquare.getType().toNumber();
     }
 
     private String toLetterNumber(int[] newPos) {
         var letter = 'A' + newPos[0];
-        var line = newPos[1];
+        var line = newPos[1] + '1';
 
         return String.valueOf(letter) + line;
+    }
 
+    private int[] toCoord(String letterNumber){
+        int letterToX = letterNumber.charAt(0) - 'A';
+        int y = letterNumber.charAt(1) - '1';
+
+        return new int[] {letterToX, y};
     }
 
     @Override
     public void play(String move, String player) {
+        if (move.contains("/")) {
+            playFirstMove(move, player);
+            return;
+        }
+
         if (!isValidMove(move, player))
             throw new RuntimeException("Move is not possible D:");
+
+        if (move.equals("PASSE"))
+        {
+            return;
+        }
 
         var positions = move.split("-");
         var firstPosition = positions[0];
         var fromX = firstPosition.charAt(0) - 'A';
-        var fromY = firstPosition.charAt(1);
+        var fromY = firstPosition.charAt(1) - '1';
 
         var secondPosition = positions[1];
         var toX = secondPosition.charAt(0) - 'A';
-        var toY = secondPosition.charAt(1);
+        var toY = secondPosition.charAt(1) - '1';
 
         var myPiece = pieces.stream().filter(p -> p.getPos()[0] == fromX && p.getPos()[1] == fromY).findFirst().orElseThrow();
         myPiece.setPos(new int[] {toX, toY});
 
         System.out.println("Move : " + move);
+        lastMove = move;
+    }
+
+    private void playFirstMove(String move, String player) {
+        var playerT = Objects.equals(player, "noir") ? PlayerTurn.BLACK : PlayerTurn.WHITE;
+        var positions = move.split("/");
+        var isFirst = true;
+
+        for (var position : positions){
+            var x = position.charAt(0) - 'A';
+            var y = position.charAt(1) - '1';
+            pieces.add(new Piece(isFirst ? PieceType.UNICORN : PieceType.PALADIN, playerT, new int[] {x, y}));
+
+            isFirst = false;
+        }
     }
 
     @Override

@@ -3,8 +3,6 @@ package escampe;
 
 import java.util.Date;
 
-import javax.swing.JFrame;
-
 /**
  * Petite Classe toute simple qui vous montre comment on peut lancer une partie sur deux IJoueurs...
  * Cela vous servira a debugger facilement votre projet en conditions presque reelles de tournoi
@@ -50,7 +48,7 @@ public class Solo {
     private static IJoueur getDefaultPlayer(String s) {
     	System.out.println(s + " : defaultPlayer");
     	// vous devez faire qq chose comme return new MonMeilleurJoueur();
-    	return new JoueurAleatoire();
+    	return new RandomPlayer();
     }
     
     /**
