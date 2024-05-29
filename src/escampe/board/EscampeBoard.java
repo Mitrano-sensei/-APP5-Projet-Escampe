@@ -41,8 +41,8 @@ public class EscampeBoard implements IBoard{
             stringBuilder.append(" ");
 
             for (int column = 0; column < 6; column++){
-                int l = line;
-                int c = column;
+                int l = column;
+                int c = line;
                 var piece = pieces.stream().filter(p -> p.getPos()[0] == l && p.getPos()[1] == c).findFirst().orElse(null);
 
                 if (piece == null) {
@@ -86,7 +86,7 @@ public class EscampeBoard implements IBoard{
         var playerPieces = pieces.stream().filter(p -> p.getPlayer() == playerT).collect(Collectors.toList());
         ArrayList<String> moves = new ArrayList<>();
 
-        if (pieces.isEmpty())
+        if (pieces.isEmpty() || pieces.stream().noneMatch(s -> s.getPlayer() == PlayerTurn.WHITE))
         {
             return getPossibleFirstMoves(player);
         }
@@ -104,10 +104,14 @@ public class EscampeBoard implements IBoard{
             m.forEach(mo -> moves.add(myPos + "-" + mo));
         }
 
-        if (moves.isEmpty())
-            return new String[] {"PASSE"}; // FIXME : May be "E"
-        else
+        if (moves.isEmpty()){
+            System.out.println("Possible moves : PASSE");
+            return new String[] {"E"};
+        }
+        else{
+            System.out.println("Possible moves : " + moves);
             return moves.toArray(new String[] {});
+        }
     }
 
     private String[] getPossibleFirstMoves(String player) {
@@ -154,7 +158,7 @@ public class EscampeBoard implements IBoard{
         if (isOut)
             return res;
 
-        boolean isOccupied = pieces.stream().anyMatch(p -> p.getPos() == newPos);
+        boolean isOccupied = pieces.stream().anyMatch(p -> p.getPos()[0] == newPos[0] && p.getPos()[1] == newPos[1]);
         boolean isLastMove = nbStep == 0;
         if (isOccupied){
             // La piece est sur une case occupée
@@ -163,7 +167,8 @@ public class EscampeBoard implements IBoard{
 
             // Ici on est au dernier mouvement
             boolean isEnemyUnicorn = pieces.stream()
-                    .anyMatch(p -> p.getPos() == newPos && p.getType() == PieceType.UNICORN && p.getPlayer() != playerT);
+                    .filter(p -> p.getPos() == newPos && p.getPlayer() != playerT)
+                    .anyMatch(p -> p.getType() == PieceType.UNICORN);
             if (!isEnemyUnicorn)
                 return res;
 
@@ -201,7 +206,7 @@ public class EscampeBoard implements IBoard{
         var letter = 'A' + newPos[0];
         var line = newPos[1] + '1';
 
-        return String.valueOf(letter) + line;
+        return String.valueOf((char)letter) + (char)line;
     }
 
     private int[] toCoord(String letterNumber){
@@ -221,8 +226,9 @@ public class EscampeBoard implements IBoard{
         if (!isValidMove(move, player))
             throw new RuntimeException("Move is not possible D:");
 
-        if (move.equals("PASSE"))
+        if (move.equals("E"))
         {
+            lastMove = "";
             return;
         }
 
@@ -238,8 +244,10 @@ public class EscampeBoard implements IBoard{
         var myPiece = pieces.stream().filter(p -> p.getPos()[0] == fromX && p.getPos()[1] == fromY).findFirst().orElseThrow();
         myPiece.setPos(new int[] {toX, toY});
 
-        System.out.println("Move : " + move);
         lastMove = move;
+
+        System.out.println("Move (" + player + "): " + move);
+        System.out.println(this);
     }
 
     private void playFirstMove(String move, String player) {

@@ -1,6 +1,5 @@
 package escampe;
 
-
 import java.util.Date;
 
 /**

@@ -3,7 +3,6 @@ package escampe;
 import escampe.board.EscampeBoard;
 import escampe.board.types.PlayerTurn;
 
-import java.util.Arrays;
 import java.util.Random;
 
 public class RandomPlayer implements IJoueur {
@@ -48,6 +47,6 @@ public class RandomPlayer implements IJoueur {
 
     @Override
     public String binoName() {
-        return "Joueur aléatoire :D";
+        return "Joueur aléatoire " + (myTurn == PlayerTurn.WHITE ? "blanc" : "noir");
     }
 }
