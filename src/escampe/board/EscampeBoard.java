@@ -322,5 +322,13 @@ public class EscampeBoard implements IBoard{
 
     }
 
+    public IBoard clone() {
+        try {
+            return (IBoard)super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
 

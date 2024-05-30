@@ -3,15 +3,14 @@ package escampe;
 import escampe.board.EscampeBoard;
 import escampe.board.types.PlayerTurn;
 
-import java.util.Random;
+public class BestPlayer implements IJoueur {
 
-public class RandomPlayer implements IJoueur {
     private PlayerTurn myTurn;
     private EscampeBoard board;
 
     @Override
-    public void initJoueur(int myColour) {
-        myTurn = myColour == -1 ? PlayerTurn.WHITE : PlayerTurn.BLACK;
+    public void initJoueur(int mycolour) {
+        myTurn = mycolour == -1 ? PlayerTurn.WHITE : PlayerTurn.BLACK;
         this.board = new EscampeBoard();
     }
 
@@ -24,20 +23,35 @@ public class RandomPlayer implements IJoueur {
     public String choixMouvement() {
         var thisPlayer = myTurn == PlayerTurn.WHITE ? "blanc" : "noir";
         var possibleMoves = board.possiblesMoves(thisPlayer);
-        var r = new Random().nextInt(possibleMoves.length);
-        var move = possibleMoves[r];
 
-        board.play(move, thisPlayer);
-        return move;
+        int maxScore = Integer.MIN_VALUE;
+        String bestMove = null;
+        for (var move : possibleMoves) {
+            var score = computeScore(move);
+            if (score > maxScore) {
+                maxScore = score;
+                bestMove = move;
+            }
+        }
+
+        return bestMove;
+    }
+
+    private int computeScore(String move) {
+        var newBoard = board.clone();
+        newBoard.play(move, myTurn == PlayerTurn.WHITE ? "blanc" : "noir");
+
+
+        return 0;
     }
 
     @Override
     public void declareLeVainqueur(int colour) {
         if (!board.gameOver())
-             return;
+            return;
 
         var me = myTurn == PlayerTurn.WHITE ? -1 : 1;
-        System.out.println(me == colour ? "Joueur aléatoire : G gagné !!! :D" : "Joueur aléatoire : g perdu D:");
+        System.out.println(me == colour ? "Meilleur joueur : G gagné !!! :D" : "Meilleur joueur : g perdu D:");
     }
 
     @Override
@@ -48,6 +62,6 @@ public class RandomPlayer implements IJoueur {
 
     @Override
     public String binoName() {
-        return "Joueur aléatoire " + (myTurn == PlayerTurn.WHITE ? "blanc" : "noir");
+        return "Meilleur joueur " + (myTurn == PlayerTurn.WHITE ? "blanc" : "noir");
     }
 }
